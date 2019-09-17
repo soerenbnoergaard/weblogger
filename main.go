@@ -40,7 +40,7 @@ func getFileNameFromTimestamp(timestamp string) (string, error) {
     if fileExists(filename) {
         return filename, nil
     } else {
-        return "", errors.New("File not found")
+        return filename, errors.New("File not found")
     }
 }
 
