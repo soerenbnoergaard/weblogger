@@ -4,6 +4,7 @@
 *.dll
 *.so
 *.dylib
+weblogger
 
 # Test binary, build with `go test -c`
 *.test
