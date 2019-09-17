@@ -152,6 +152,7 @@ func main() {
     }
 
     // Start server
+    fmt.Println("Starting server...")
     http.HandleFunc("/", handler)
     log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
