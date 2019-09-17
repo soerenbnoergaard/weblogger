@@ -106,6 +106,7 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
 
     defer f.Close()
 
+    w.Header().Set("Access-Control-Allow-Origin", "*")
     _, err = f.WriteString(fmt.Sprintf("%s\n", data[0]))
 
     if err != nil {
