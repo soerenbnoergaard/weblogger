@@ -28,3 +28,32 @@ To get data from another date, (e.g. 2019-02-01) use the following url:
 
     http://localhost:8080?date=2019-02-01
 
+## Deploying the server
+
+On a linux server with systemd, generate the file `/etc/systemd/system/weblogger-sensor.service` with the content:
+
+    [Unit]
+    Description=Weblogger
+    After=network.target
+    StartLimitIntervalSec=0
+
+    [Service]
+    Type=simple
+    Restart=always
+    RestartSec=1
+    User=<<USERNAME>>
+    ExecStart=<</PATH/TO/>>weblogger <<PORT>> <<TOKEN>>
+
+    [Install]
+    WantedBy=multi-user.target
+
+where the tags marked with `<<>>` must be filled out, of course. To start the server, run
+
+    systemctl start weblogger-sensor
+
+and to do so on boot, run
+
+    systemctl enable weblogger-sensor
+
+Note that the port must be opened to the outside world to access it from outside the server.
+
