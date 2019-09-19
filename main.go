@@ -2,6 +2,7 @@ package main
 
 import (
     "errors"
+    "flag"
     "fmt"
     "io/ioutil"
     "log"
@@ -12,9 +13,16 @@ import (
     "time"
 )
 
+
+type Settings struct {
+    port int;
+    token string;
+    path string;
+    verbose bool;
+}
+
 var (
-    activeToken = ""
-    activePath = ""
+    settings Settings
 )
 
 func fileExists(filename string) bool {
@@ -35,8 +43,8 @@ func getExecutableDirectory() string {
 }
 
 func getFileNameFromTimestamp(timestamp string) (string, error) {
-    basedir := activePath
-    filename := filepath.Join(basedir, fmt.Sprintf("%s-%s.csv", activeToken, timestamp))
+    basedir := settings.path
+    filename := filepath.Join(basedir, fmt.Sprintf("%s-%s.csv", settings.token, timestamp))
     if fileExists(filename) {
         return filename, nil
     } else {
@@ -55,6 +63,10 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 
     keys := r.URL.Query()
     timestamp, ok := keys["date"]
+
+    if settings.verbose {
+        fmt.Printf("GET:  %s\n", r.URL);
+    }
 
     var filename string
     var err error
@@ -81,12 +93,16 @@ func handleGetRequest(w http.ResponseWriter, r *http.Request) {
 func handlePostRequest(w http.ResponseWriter, r *http.Request) {
     keys := r.URL.Query()
 
+    if settings.verbose {
+        fmt.Printf("POST: %s\n", r.URL);
+    }
+
     token, ok := keys["token"]
     if !ok {
         return
     }
 
-    if token[0] != activeToken {
+    if token[0] != settings.token {
         log.Printf("Incorrect token: %s\n", token[0])
         return
     }
@@ -128,32 +144,45 @@ func handler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func main() {
-    // Parse arguments
-    if len(os.Args) < 3 {
-        fmt.Println("Usage: ./weblogger PORT TOKEN [PATH]")
-        return
+func parseArgs() error {
+    // Optional arguments
+    flag.StringVar(&settings.path, "d", getExecutableDirectory(), "Directory where datafiles are stored")
+    flag.BoolVar(&settings.verbose, "v", false, "Enable verbose output")
+    flag.Parse()
+
+    // Positional arguments
+    if flag.NArg() < 2 {
+        fmt.Println("Usage: ./weblogger [OPTIONS] [-h] PORT TOKEN")
+        return errors.New("Not enough arguments given")
     }
 
     // Port number
-    port, err := strconv.Atoi(os.Args[1])
+    port, err := strconv.Atoi(flag.Arg(0))
     if err != nil {
-        log.Fatal(fmt.Sprintf("Could not parse port number: %s\n", os.Args[1]))
+        return errors.New(fmt.Sprintf("Port %s is not a number", flag.Arg(0)))
+    }
+    settings.port = port
+
+    // Token
+    settings.token = flag.Arg(1)
+
+    if settings.verbose {
+        fmt.Printf("Server settings:\n%+v\n", settings)
+    }
+    return nil
+}
+
+func main() {
+    err := parseArgs()
+    if err != nil {
+        log.Fatal(err)
         return
     }
 
-    // Token
-    activeToken = os.Args[2]
-
-    // Data file path
-    if len(os.Args) < 4 {
-        activePath = getExecutableDirectory()
-    } else {
-        activePath = os.Args[3]
-    }
-
     // Start server
-    fmt.Println("Starting server...")
+    if settings.verbose {
+        fmt.Println("Starting server...")
+    }
     http.HandleFunc("/", handler)
-    log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
+    log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", settings.port), nil))
 }
