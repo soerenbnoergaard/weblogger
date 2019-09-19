@@ -3,13 +3,14 @@ Web server for logging data.
 
 ## Usage
 
-    ./weblogger PORT TOKEN [PATH]
+    ./weblogger [OPTIONS] [-h] PORT TOKEN
 
 where 
 
+- `-h` shows the available options.
+- `OPTION` are options found in the `-h` menu.
 - `PORT` is the port where the server is started.
 - `TOKEN` is the token required to write data to a datafile.
-- `PATH` is the path where data files are stored. By default, the path containing the `weblogger` binary is used.
 
 ## Writing data
 
