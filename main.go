@@ -19,6 +19,7 @@ type Settings struct {
     token string;
     path string;
     verbose bool;
+    noTimestamp bool;
 }
 
 var (
@@ -123,7 +124,13 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
     defer f.Close()
 
     w.Header().Set("Access-Control-Allow-Origin", "*")
-    _, err = f.WriteString(fmt.Sprintf("%s\n", data[0]))
+    var s string
+    if settings.noTimestamp {
+        s = fmt.Sprintf("%s\n", data[0])
+    } else {
+        s = fmt.Sprintf("%d,%s\n", time.Now().Unix(), data[0])
+    }
+    _, err = f.WriteString(s)
 
     if err != nil {
         log.Fatal(fmt.Sprintf("Could not append to file: %s\n", filename))
@@ -148,6 +155,7 @@ func parseArgs() error {
     // Optional arguments
     flag.StringVar(&settings.path, "d", getExecutableDirectory(), "Directory where datafiles are stored")
     flag.BoolVar(&settings.verbose, "v", false, "Enable verbose output")
+    flag.BoolVar(&settings.noTimestamp, "t", false, "Disable timestamp")
     flag.Parse()
 
     // Positional arguments
