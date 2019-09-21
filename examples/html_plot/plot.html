@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<!-- flaviocopes.com/svg -->
+<html>
+    <html>
+    </html>
+    <body>
+
+        <div id="graph"></div>
+        <p id="text"></p>
+
+    <script>
+
+function draw(id, x, y, height=200, aspect=2.0, xmin=null, xmax=null, ymin=null, ymax=null)
+{
+    var arrmin = function(arr) {return Math.min.apply(Math, arr);};
+    var arrmax = function(arr) {return Math.max.apply(Math, arr);};
+
+    if (x.length != y.length)
+        return;
+    else if (x.length == 0)
+        return;
+
+    if (xmin == null)
+        xmin = arrmin(x);
+    if (xmax == null)
+        xmax = arrmax(x);
+    if (ymin == null)
+        ymin = arrmin(y);
+    if (ymax == null)
+        ymax = arrmax(y);
+
+    var fx = function(p) {return (p-xmin)*aspect*height/(xmax-xmin)};
+    var fy = function(p) {return height - (p-ymin)*height/(ymax-ymin)};
+    var plot = function(x, y) {
+        var d = "M "+fx(x[0])+" "+fy(y[0]);
+        for (var n = 1; n < x.length; n++) {
+            d += " L "+fx(x[n])+" "+(fy(y[n]));
+        }
+        return '<path d="'+d+'" stroke="#0000ff" fill="#ffffff" />\n';
+    }
+
+    var s = "";
+    s += '<svg width="'+(aspect*height)+'" height="'+(height)+'">\n';
+    s += '<path d="M '+fx(xmin)+' '+fy(ymin)+' L '+fx(xmax)+' '+fy(ymin)+' L '+fx(xmax)+' '+fy(ymax)+' L '+fx(xmin)+' '+fy(ymax)+' Z" stroke="black" fill="white"/>\n';
+    s += plot(x, y);
+    s += '<text text-anchor="start" x="'+fx(xmin)+'" y="'+(fy(ymin)+ 0)+'">'+ymin+'</text>\n';
+    s += '<text text-anchor="start" x="'+fx(xmin)+'" y="'+(fy(ymax)+12)+'">'+ymax+'</text>\n';
+    s += '</svg>';
+    document.getElementById("graph").innerHTML = s;
+}
+
+function httpGet(url)
+{
+    var xmlHttp = new XMLHttpRequest();
+    xmlHttp.open("GET", url, false);
+    xmlHttp.send(null);
+    return xmlHttp.responseText;
+}
+
+function getCsv(url, xcol=0, ycol=1)
+{
+    var lines = httpGet(url).split("\n");
+    var x = [];
+    var y = [];
+    for (var n = 0; n < lines.length; n++) {
+        var cells = lines[n].split(",");
+        var x_ = parseFloat(cells[xcol]);
+        var y_ = parseFloat(cells[ycol]);
+        if (isNaN(x_) || isNaN(y_))
+            continue;
+        x.push(x_);
+        y.push(y_);
+    }
+    return {x:x, y:y};
+}
+
+function arange(N)
+{
+    var a = new Array(N)
+    for (var n = 0; n < N; n++) {
+        a[n] = n;
+    }
+    return a;
+}
+
+function unixToTimeString(unixTimestamp)
+{
+    var t = new Date(unixTimestamp*1000);
+    return new Date(t.toUTCString()).toLocaleString()
+}
+
+var data = getCsv("http://log.soerenbnoergaard.dk/", 0, 1);
+draw("graph", arange(data.y.length), data.y);
+document.getElementById("text").innerHTML = "Newest log: "+unixToTimeString(data.x[data.x.length-1]);
+
+    </script>
+
+    </body>
+</html>
