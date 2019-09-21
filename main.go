@@ -123,7 +123,6 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
 
     defer f.Close()
 
-    w.Header().Set("Access-Control-Allow-Origin", "*")
     var s string
     if settings.noTimestamp {
         s = fmt.Sprintf("%s\n", data[0])
@@ -141,6 +140,8 @@ func handlePostRequest(w http.ResponseWriter, r *http.Request) {
 }
 
 func handler(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Access-Control-Allow-Origin", "*")
+
     switch (r.Method) {
     case "GET":
         handleGetRequest(w, r)
